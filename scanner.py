@@ -10,11 +10,13 @@ import shutil
 # Helper to read the `fileextexept` environment variable at runtime.
 def get_excluded_exts() -> list[str]:
     """Return a list of lowercase extensions that should be skipped."""
-    return [
-        ext.strip().lower()
-        for ext in os.environ.get("fileextexept", "").split(",")
-        if ext.strip()
-    ]
+    cleaned: list[str] = []
+    raw = os.environ.get("fileextexept", "")
+    for ext in raw.split(','):
+        ext = ext.strip().strip('"').strip("'").lower()
+        if ext:
+            cleaned.append(ext)
+    return cleaned
 
 
 def file_hash(file_path: str) -> str:
