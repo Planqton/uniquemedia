@@ -7,6 +7,14 @@ import json
 import shutil
 
 
+# Extensions to ignore, read from the environment variable 'fileextexept'.
+EXCLUDE_EXTS = [
+    ext.strip().lower()
+    for ext in os.environ.get("fileextexept", "").split(",")
+    if ext.strip()
+]
+
+
 def file_hash(file_path: str) -> str:
     """Return a hash of the media content, ignoring metadata when possible."""
     ffmpeg_paths = ["/ffmpeg", "/ffmpeg/ffmpeg", "/usr/bin/ffmpeg"]
@@ -94,12 +102,18 @@ def move_to_double(file_path: str, double_dir: str = "/double") -> None:
         print(f"Failed to move {file_path} to {double_dir}: {e}")
 
 
-def scan_directory(path: str, known: dict[str, tuple[str, bool]]) -> None:
+def scan_directory(
+    path: str,
+    known: dict[str, tuple[str, bool]],
+    exclude_exts: list[str],
+) -> None:
     """Scan a directory recursively, print file info and handle duplicates."""
     file_count = 0
     dup_count = 0
     for root, dirs, files in os.walk(path):
         for name in files:
+            if any(name.lower().endswith(ext) for ext in exclude_exts):
+                continue
             file_path = os.path.join(root, name)
             try:
                 size = os.path.getsize(file_path)
@@ -132,9 +146,14 @@ def main() -> None:
     path = sys.argv[1] if len(sys.argv) > 1 else '/scanmedia'
     run = 1
     known: dict[str, tuple[str, bool]] = {}
+    exclude_exts = EXCLUDE_EXTS
     while True:
         print(f"Starte neuen Durchgang Nr: {run}")
-        scan_directory(path, known)
+        if exclude_exts:
+            print("Ausgeschlossene Dateiendungen: " + ", ".join(exclude_exts))
+        else:
+            print("Ausgeschlossene Dateiendungen: keine")
+        scan_directory(path, known, exclude_exts)
         run += 1
         time.sleep(1)
 

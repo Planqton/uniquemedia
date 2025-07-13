@@ -30,5 +30,18 @@ remains in the scanned folder. If one of two identical files contains media
 metadata while the other does not, the metadata-rich file is kept and the other
 is moved.
 
+You can exclude certain file extensions from scanning by setting the
+`fileextexept` environment variable. Provide a comma-separated list of
+extensions (with leading dots). The scanner prints the excluded extensions at
+the start of each run:
+
+```bash
+docker run --rm -v /path/to/scan:/scanmedia \
+  -e fileextexept=".old,.filesync" uniquemedia-scanner
+```
+
+In this example, files ending with `.old` or `.filesync` will be ignored during
+the scan.
+
 If you need to process media files with `ffmpeg`, the binary is available in the
 container at `/ffmpeg`.
