@@ -1,10 +1,13 @@
 # Uniquemedia Scanner
 
 This repository contains a simple directory scanner written in Python. The
-scanner loops endlessly, printing the start of each run and listing all files,
-their sizes and a SHA-256 hash of the contents. Duplicate files are detected by
-comparing hashes only. When identical hashes are found, the version containing
-metadata is kept if possible.
+scanner loops endlessly, printing `Starte neuen Durchgang` with the iteration
+number at the start of every scan. All files are listed with their sizes and a
+SHA-256 hash of the contents. Duplicate files are detected by comparing hashes
+only. When identical hashes are found, the version containing metadata is kept
+if possible. A file is only considered a duplicate when another path with the
+same hash exists; scanning the same file again will no longer cause it to be
+moved.
 
 ## Running with Docker
 
@@ -15,7 +18,8 @@ docker build -t uniquemedia-scanner .
 ```
 
 Run the scanner (replace `/path/to/scan` with the directory you want to
-scan). The container expects the directory to be mounted at `/scanmedia`:
+scan). The container expects the directory to be mounted at `/scanmedia`.
+If no directory is provided, `/scanmedia` is scanned by default:
 
 ```bash
 docker run --rm -v /path/to/scan:/scanmedia uniquemedia-scanner

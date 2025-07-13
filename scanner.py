@@ -82,15 +82,18 @@ def scan_directory(path: str, known: dict[str, tuple[str, bool]]) -> None:
             meta = has_metadata(file_path)
             if digest:
                 if digest in known:
-                    dup_count += 1
                     other_path, other_meta = known[digest]
-                    if meta and not other_meta:
-                        print(f"Duplicate found: {file_path} replaces {other_path} (metadata preference)")
-                        move_to_double(other_path)
-                        known[digest] = (file_path, meta)
-                    else:
-                        print(f"Duplicate found: {file_path} matches {other_path}")
-                        move_to_double(file_path)
+                    if file_path != other_path:
+                        dup_count += 1
+                        if meta and not other_meta:
+                            print(
+                                f"Duplicate found: {file_path} replaces {other_path} (metadata preference)"
+                            )
+                            move_to_double(other_path)
+                            known[digest] = (file_path, meta)
+                        else:
+                            print(f"Duplicate found: {file_path} matches {other_path}")
+                            move_to_double(file_path)
                 else:
                     known[digest] = (file_path, meta)
             print(f"{file_path} - {size} bytes - {digest}")
