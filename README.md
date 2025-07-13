@@ -45,6 +45,11 @@ docker run --rm -v /path/to/scan:/scanmedia \
 In this example, files ending with `.old` or `.filesync` will be ignored during
 the scan.
 
+You can control whether the scanner automatically starts new runs via the
+`autoscan` environment variable. When set to `false`, the program waits for a
+key press before beginning the next scan iteration. The default value is
+`true`, so scans repeat without interaction.
+
 The scanner requires `ffmpeg` (and `ffprobe`) to calculate hashes and read
 metadata. If these binaries are not found at start-up, the program exits with
 `ffmpeg not found`. In the Docker image, they are expected to be available at

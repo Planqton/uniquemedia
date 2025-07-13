@@ -214,6 +214,12 @@ def main() -> None:
     run = 1
     known: dict[str, tuple[str, bool]] = {}
     while True:
+        autoscan = os.environ.get('autoscan', 'true').strip().lower() != 'false'
+        if not autoscan:
+            try:
+                input('Enter drücken für nächsten Durchgang...')
+            except EOFError:
+                pass
         exclude_exts = get_excluded_exts()
         print(f"Starte neuen Durchgang Nr: {run}")
         if exclude_exts:
@@ -223,7 +229,8 @@ def main() -> None:
         moved = scan_directory(path, known, exclude_exts)
         write_log(moved)
         run += 1
-        time.sleep(1)
+        if autoscan:
+            time.sleep(1)
 
 
 if __name__ == '__main__':
