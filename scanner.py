@@ -8,15 +8,42 @@ import shutil
 
 
 def file_hash(file_path: str) -> str:
-    """Return SHA-256 hash of a file's contents."""
+    """Return a hash of the media content, ignoring metadata when possible."""
+    ffmpeg_paths = ["/ffmpeg", "/ffmpeg/ffmpeg", "/usr/bin/ffmpeg"]
+
+    for bin_path in ffmpeg_paths:
+        if os.path.exists(bin_path):
+            try:
+                result = subprocess.run(
+                    [
+                        bin_path,
+                        "-v",
+                        "quiet",
+                        "-i",
+                        file_path,
+                        "-map_metadata",
+                        "-1",
+                        "-f",
+                        "md5",
+                        "-",
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+                if result.returncode == 0 and "MD5=" in result.stdout:
+                    return result.stdout.strip().split("=", 1)[1]
+            except Exception:
+                pass
+
     h = hashlib.sha256()
     try:
         with open(file_path, "rb") as f:
             for chunk in iter(lambda: f.read(8192), b""):
                 h.update(chunk)
+        return h.hexdigest()
     except OSError:
         return ""
-    return h.hexdigest()
 
 
 def has_metadata(file_path: str) -> bool:

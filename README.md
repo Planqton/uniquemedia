@@ -2,12 +2,11 @@
 
 This repository contains a simple directory scanner written in Python. The
 scanner loops endlessly, printing `Starte neuen Durchgang` with the iteration
-number at the start of every scan. All files are listed with their sizes and a
-SHA-256 hash of the contents. Duplicate files are detected by comparing hashes
-only. When identical hashes are found, the version containing metadata is kept
-if possible. A file is only considered a duplicate when another path with the
-same hash exists; scanning the same file again will no longer cause it to be
-moved.
+number at the start of every scan. Files are hashed using ffmpeg's `md5` muxer
+so that metadata is ignored when determining equality. When identical hashes are
+found, the version containing metadata is kept if possible. A file is only
+considered a duplicate when another path with the same hash exists; scanning the
+same file again will no longer cause it to be moved.
 
 ## Running with Docker
 
