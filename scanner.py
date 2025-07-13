@@ -7,6 +7,24 @@ import json
 import shutil
 
 
+# Locate required binaries
+def find_binary(candidates: list[str]) -> str | None:
+    """Return the first existing path from candidates or None."""
+    for path in candidates:
+        if os.path.exists(path) and os.access(path, os.X_OK):
+            return path
+    return None
+
+
+FFMPEG_PATH = find_binary(["/ffmpeg", "/ffmpeg/ffmpeg", "/usr/bin/ffmpeg"])
+FFPROBE_PATH = find_binary([
+    "/ffmpeg/ffprobe",
+    "/ffprobe",
+    "/usr/bin/ffprobe",
+    "/ffmpeg",
+])
+
+
 # Helper to read the `fileextexept` environment variable at runtime.
 def get_excluded_exts() -> list[str]:
     """Return a list of lowercase extensions that should be skipped."""
@@ -21,32 +39,29 @@ def get_excluded_exts() -> list[str]:
 
 def file_hash(file_path: str) -> str:
     """Return a hash of the media content, ignoring metadata when possible."""
-    ffmpeg_paths = ["/ffmpeg", "/ffmpeg/ffmpeg", "/usr/bin/ffmpeg"]
-
-    for bin_path in ffmpeg_paths:
-        if os.path.exists(bin_path):
-            try:
-                result = subprocess.run(
-                    [
-                        bin_path,
-                        "-v",
-                        "quiet",
-                        "-i",
-                        file_path,
-                        "-map_metadata",
-                        "-1",
-                        "-f",
-                        "md5",
-                        "-",
-                    ],
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                )
-                if result.returncode == 0 and "MD5=" in result.stdout:
-                    return result.stdout.strip().split("=", 1)[1]
-            except Exception:
-                pass
+    if FFMPEG_PATH:
+        try:
+            result = subprocess.run(
+                [
+                    FFMPEG_PATH,
+                    "-v",
+                    "quiet",
+                    "-i",
+                    file_path,
+                    "-map_metadata",
+                    "-1",
+                    "-f",
+                    "md5",
+                    "-",
+                ],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if result.returncode == 0 and "MD5=" in result.stdout:
+                return result.stdout.strip().split("=", 1)[1]
+        except Exception:
+            pass
 
     h = hashlib.sha256()
     try:
@@ -60,33 +75,27 @@ def file_hash(file_path: str) -> str:
 
 def has_metadata(file_path: str) -> bool:
     """Return True if ffprobe detects metadata in the file."""
-    ffprobe_paths = [
-        "/ffmpeg/ffprobe",
-        "/ffprobe",
-        "/usr/bin/ffprobe",
-        "/ffmpeg",
-    ]
-    for bin_path in ffprobe_paths:
-        if os.path.exists(bin_path):
+    if not FFPROBE_PATH:
+        return False
+    try:
+        result = subprocess.run(
+            [FFPROBE_PATH, "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", file_path],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        if result.returncode == 0:
             try:
-                result = subprocess.run(
-                    [bin_path, "-v", "quiet", "-print_format", "json", "-show_format", "-show_streams", file_path],
-                    capture_output=True,
-                    text=True,
-                    timeout=10,
-                )
-                if result.returncode == 0:
-                    try:
-                        info = json.loads(result.stdout)
-                    except json.JSONDecodeError:
-                        continue
-                    if info.get("format", {}).get("tags"):
-                        return True
-                    for st in info.get("streams", []):
-                        if st.get("tags"):
-                            return True
-            except Exception:
-                pass
+                info = json.loads(result.stdout)
+            except json.JSONDecodeError:
+                return False
+            if info.get("format", {}).get("tags"):
+                return True
+            for st in info.get("streams", []):
+                if st.get("tags"):
+                    return True
+    except Exception:
+        pass
     return False
 
 
@@ -148,6 +157,9 @@ def scan_directory(
 
 def main() -> None:
     path = sys.argv[1] if len(sys.argv) > 1 else '/scanmedia'
+    if not FFMPEG_PATH:
+        print('ffmpeg not found')
+        sys.exit(1)
     run = 1
     known: dict[str, tuple[str, bool]] = {}
     while True:

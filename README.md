@@ -44,5 +44,7 @@ docker run --rm -v /path/to/scan:/scanmedia \
 In this example, files ending with `.old` or `.filesync` will be ignored during
 the scan.
 
-If you need to process media files with `ffmpeg`, the binary is available in the
-container at `/ffmpeg`.
+The scanner requires `ffmpeg` (and `ffprobe`) to calculate hashes and read
+metadata. If these binaries are not found at start-up, the program exits with
+`ffmpeg not found`. In the Docker image, they are expected to be available at
+`/ffmpeg`.
