@@ -13,10 +13,10 @@ docker build -t uniquemedia-scanner .
 ```
 
 Run the scanner (replace `/path/to/scan` with the directory you want to
-scan):
+scan). The container expects the directory to be mounted at `/scanmedia`:
 
 ```bash
-docker run --rm -v /path/to/scan:/data uniquemedia-scanner /data
+docker run --rm -v /path/to/scan:/scanmedia uniquemedia-scanner
 ```
 
 The scanner will repeat indefinitely until you stop the container.

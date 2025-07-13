@@ -19,7 +19,7 @@ def scan_directory(path: str) -> None:
 
 
 def main() -> None:
-    path = sys.argv[1] if len(sys.argv) > 1 else '.'
+    path = sys.argv[1] if len(sys.argv) > 1 else '/scanmedia'
     run = 1
     while True:
         print(f"Starte neuen Durchgang Nr: {run}")
