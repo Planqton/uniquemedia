@@ -7,12 +7,14 @@ import json
 import shutil
 
 
-# Extensions to ignore, read from the environment variable 'fileextexept'.
-EXCLUDE_EXTS = [
-    ext.strip().lower()
-    for ext in os.environ.get("fileextexept", "").split(",")
-    if ext.strip()
-]
+# Helper to read the `fileextexept` environment variable at runtime.
+def get_excluded_exts() -> list[str]:
+    """Return a list of lowercase extensions that should be skipped."""
+    return [
+        ext.strip().lower()
+        for ext in os.environ.get("fileextexept", "").split(",")
+        if ext.strip()
+    ]
 
 
 def file_hash(file_path: str) -> str:
@@ -146,8 +148,8 @@ def main() -> None:
     path = sys.argv[1] if len(sys.argv) > 1 else '/scanmedia'
     run = 1
     known: dict[str, tuple[str, bool]] = {}
-    exclude_exts = EXCLUDE_EXTS
     while True:
+        exclude_exts = get_excluded_exts()
         print(f"Starte neuen Durchgang Nr: {run}")
         if exclude_exts:
             print("Ausgeschlossene Dateiendungen: " + ", ".join(exclude_exts))

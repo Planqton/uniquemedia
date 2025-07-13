@@ -32,8 +32,8 @@ is moved.
 
 You can exclude certain file extensions from scanning by setting the
 `fileextexept` environment variable. Provide a comma-separated list of
-extensions (with leading dots). The scanner prints the excluded extensions at
-the start of each run:
+extensions (with leading dots). The scanner reads this variable at the start of
+every run and prints the excluded extensions:
 
 ```bash
 docker run --rm -v /path/to/scan:/scanmedia \
